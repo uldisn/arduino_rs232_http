@@ -1,0 +1,12 @@
+{
+    "name": "arduino_rs232_http",
+    "version": "0.1.0",
+	"description":"collect arduino sensor data and push to http",
+	"license" : "BSD-3-Clause",
+	"dependencies": {
+		"node-ini": "1.0.0",
+		"serialport":"1.7.4",
+		"moment":"2.10.6",
+		"request":"2.61.0"	
+	}	
+}
