@@ -1,129 +1,217 @@
 /**
-* libs:
-* ini files: https://www.npmjs.com/package/node-ini
-* serial: http://codebrane.com/blog/2014/04/27/designing-a-simple-serial-api-for-the-arduino-and-node-dot-js/
-* moment: npm install moment --save
-* http request - https://www.npmjs.com/package/request
-*/
+ * libs:
+ * ini files: https://www.npmjs.com/package/node-ini
+ * serial: http://codebrane.com/blog/2014/04/27/designing-a-simple-serial-api-for-the-arduino-and-node-dot-js/
+ * moment: npm install moment --save
+ * http request - https://www.npmjs.com/package/request
+ */
 
 /**
-* INIT
-*/
+ * get cofig file from command arguments
+ */
+var configFile = 'config.ini';
+
+var myArgs = process.argv.slice(2);
+if (myArgs[0]) {
+    configFile = myArgs[0];
+}
+
+var debug = false;
+if (myArgs[1] && myArgs[1] == 'debug') {
+    debug = true;
+}
+console.log('Config file: ', configFile);
+
+/**
+ * load libs
+ */
 var moment = require('moment');
 var request = require('request');
-
-var minuteCount = [];
-
-console.log(minuteCount);
-
 var ini = require('node-ini');
+
+var minuteCount = new Array();
+var sensorBit = new Array();
+var sensorLine = '';
+/**
+ * process config
+ * @type Array
+ */
 var config = [];
+ini.parse(configFile, function (err, config) {
+    if (err)
+        console.log(err)
+    else {
 
-ini.parse('config.ini', function(err,config){
-  if(err) console.log(err)
-  else {
-	  
-    console.log('ini')
-    console.log('com=' +config.arduino['com'])
-    console.log('baudrate=' +config.arduino['baudrate'])
-    console.log('url=' +config.www['url'])
-	
-	linijaBit = {1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0};
-	for (var key in linijaBit) {
-		if(config['linija' + key])
-		{
-			var n = parseInt(config['linija' + key].bit);
-			linijaBit[key] = n;
-			//n = Math.pow(2,(n-1));
-		}
-		
-	}
-	console.log('Linija:BIT');
-	console.log(linijaBit);
-    console.log('========================')
-	
-	var SerialPort = require("serialport").SerialPort
-	var serialPort = new SerialPort(config.arduino['com'], {
-	  baudrate: config.arduino['baudrate']
-	});
+        console.log('config file:' + configFile);
+        console.log('com=' + config.arduino['com']);
+        console.log('baudrate=' + config.arduino['baudrate']);
+        console.log('url=' + config.www['url']);
+        console.log('=======================');
+
+        sensorBit = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0};
+        for (var sensor in sensorBit) {
+            if (config['sensor_' + sensor])
+            {
+                var n = parseInt(config['sensor_' + sensor].bit);
+                sensorBit[sensor] = n;
+                sensorLine = sensorLine + sensor;
+            }
+
+        }
+        console.log('Sensors:BIT');
+        console.log(sensorBit);
+        console.log('========================')
 
 
-	serialPort.on("open", function () {
-	  console.log('open');
-	  var prevData = 0;
-	  serialPort.on('data', function(data) {
-		console.log('data received: ' + data);
-		
-		for (var key in linijaBit) {
-			var bit = linijaBit[key];
-			if(bit == 0) continue;
+        var SerialPort = require("serialport").SerialPort
+        var serialPort = new SerialPort(config.arduino['com'], {
+            baudrate: config.arduino['baudrate']
+        });
 
-			if(
-			(Math.pow(2,(bit-1)) & prevData) == 1
-			&& (Math.pow(2,(bit-1)) & data) == 0
-			){
-				var dateMinute = actualMinute();			
-				if(!minuteCount[key+'/'+dateMinute]){
-					minuteCount[key+'/'+dateMinute] = 0;
-				}	
-				minuteCount[key+'/'+dateMinute] ++;				
-			}	
-		}
-		prevData = data;
-//		if(data == 0){
-//			var dateMinute = actualMinute();			
-//			if(!minuteCount[dateMinute]){
-//				minuteCount[dateMinute] = 0;
-//			}	
-//			minuteCount[dateMinute] ++;
-//		}
-		console.log(minuteCount);
-	  });
+        serialPort.on("open", function () {
+            console.log('open');
+            if (debug) {
+                console.log('Rec.Data | Sensor');
+                console.log('-----------------');
+                console.log('         | ' + sensorLine);
+                console.log('=================');
+            }
+            var prevData = 1;
+            serialPort.on('data', function (data) {
 
-	});	
+                var statusLine = decbin(data, 8) + ' | ';
+                for (var sensor in sensorBit) {
+                    var bit = sensorBit[sensor];
+                    if (bit == 0)
+                        continue;
 
-	/**
-	* each minute try sent data to server
-	*/
-	setInterval(function(){
-        var dateMinute = actualMinute();
-  
-		var readyMinuteCount = [];
-		
-		// get compleet minutes
-		
-		/**
-		for (var minute in minuteCount) {
-		  if(minute != dateMinute)
-		  {
-			  readyMinuteCount[minute] = minuteCount[minute];
-		  }
-		}
-		var options = {
-		  uri: config.www['url'] + '&linija_id=' + config.arduino['linija'],
-		  method: 'POST',
-		  json: readyMinuteCount
-		};
+                    /**
+                     * registre sensor on OFF
+                     */
+                    if (
+                            (Math.pow(2, (bit - 1)) & prevData) == 1
+                            && (Math.pow(2, (bit - 1)) & data) == 0
+                            ) {
+                        var dateMinute = actualMinute();
 
-		request(options, function (error, response, body) {
-		  if (!error && response.statusCode == 200) {
-			console.log('sen to www');
-			//on succes sending data remove sended data
-			for (var minute in minuteCount) {
-			  if(minute != dateMinute)
-			  {
-				  minuteCount.splice(minute, 1);;
-			  }
-			}				
-		  }
-		});	  
-		*/
-	}, 10 * 1000);  	
-  }
+                        if (!minuteCount[sensor + '/' + dateMinute]) {
+                            minuteCount[sensor + '/' + dateMinute] = 0;
+                        }
+                        minuteCount[sensor + '/' + dateMinute]++;
+                        statusLine = statusLine + '1';
+                    } else {
+                        statusLine = statusLine + '0';
+                    }
+                    statusLine = statusLine + '(' + sensor + ')';
+                }
+                prevData = data;
+                if (debug)
+                    console.log(statusLine);
+
+
+            });
+
+        });
+
+        setInterval(function () {
+            var dateMinute = actualMinute();
+            for (var sensor in sensorBit) {
+
+                if (sensorBit[sensor] == 0)
+                    continue;
+                if (!minuteCount[sensor + '/' + dateMinute]) {
+                    minuteCount[sensor + '/' + dateMinute] = 0;
+                }
+            }
+        }, 5 * 1000);
+        /**
+         * each minute try sent data to server
+         */
+        setInterval(function () {
+
+            console.log('Start wwww');
+            console.log(minuteCount);
+            console.log(minuteCount.length);
+
+//            if (minuteCount.length == 0) {
+//                console.log('www: no data');
+//                return;
+//            }
+
+            var dateMinute = actualMinute();
+            console.log('Actual minute: ' + dateMinute);
+            var readyMinuteCount = {};
+
+            /**
+             * get compleet minutes
+             */
+            for (var sensorMinute in minuteCount) {
+                console.log('Sensor/Minute: ' + sensorMinute + ' Count: ' + minuteCount[sensorMinute]);
+                var aSensorMinute = sensorMinute.split('/');
+                if (aSensorMinute[1] != dateMinute)
+                {
+                    readyMinuteCount[sensorMinute] = minuteCount[sensorMinute];
+                }
+
+            }
+            if (Object.keys(readyMinuteCount).length == 0) {
+
+                console.log('www: no data for post');
+                return;
+            }
+
+            /**
+             * post ready minutes
+             */
+            var options = {
+                uri: config.www['url'] + '&arduino_name=' + config.arduino['name'],
+                method: 'POST',
+                json: readyMinuteCount
+            };
+            console.log(' ===== Ready minutes =========== ');
+            console.log(readyMinuteCount);
+
+            request(options, function (error, response, body) {
+                if (!error && response.statusCode == 200) {
+                    //var info = JSON.parse(body)
+                    console.log('body');
+                    console.dir(body);
+                    console.log('dzesh nosutitos')
+                    for (var sensorMinute in minuteCount) {
+
+                        var aSensorMinute = sensorMinute.split('/');
+                        if (aSensorMinute[1] != dateMinute)
+                        {
+                            console.log('Delete: ' + sensorMinute)
+                            console.log('Delete skaits: ' + minuteCount[sensorMinute])
+                            delete minuteCount[sensorMinute];
+                        }
+
+                    }
+                    console.log('Pec tirishanas')
+                    console.log(minuteCount)
+                } else {
+                    console.log('www error:' + error);
+                    console.log('body');
+                    console.dir(body);
+                    console.log('www response:');
+                    console.log(response);
+                }
+                console.log('Finish wwww');
+            });
+
+        }, 10 * 1000);
+    }
 });
 
 
-function actualMinute(){
-	return moment().format('YYYY-MM-DD hh:mm');
+function actualMinute() {
+    return moment().format('YYYY-MM-DD hh:mm');
 }
 
+function decbin(dec, length) {
+    var out = "";
+    while (length--)
+        out += (dec >> length) & 1;
+    return out;
+}
