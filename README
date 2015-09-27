@@ -1,0 +1,73 @@
+Install un WINDOWS
+=================
+
+NodeJs
+------
+Download and install: https://nodejs.org/en/download/
+
+Arduino
+-------
+Windows driver: https://www.arduino.cc/en/Main/Software
+
+XP problemu gadijuma instrukcija: http://woodsgood.ca/projects/2014/11/18/driver-for-arduino-nano-with-ch340g-usb-chip/, kur, japalaiž http://www.wch.cn/download/CH341SER_EXE.html
+
+NODE
+--
+Janokope https://github.com/uldisn/arduino_rs232_http
+
+Direktorija  arduino_rs232_http japalaiž:
+
+    ```
+    npm install
+    ```
+Kas sainstales visas nepiecieshamas NodeJs bibliotekas.
+
+config.ini faila jauzliek korektais COM ports, kam pieslegts ARDUINO un jauzrada, sensoram izmantotais bits.
+
+Šaja piemera 4 sensors pieslegts 2 Arduino bitam:
+    ```
+    [sensor_4]
+    bit=2
+    ```    
+    
+No komandrindas programmu palaiž:
+
+    ```
+    node collect.js
+    ```
+    
+Var izmantot ar parametriem:
+    
+    ```
+    node collect.js [config.ini] [debug]
+    ```
+Kur:
+
+config.ini - kofig fails
+debug - rada papildus info
+
+Palaist ka servisu
+==================
+
+NodeJs palaisanai, ka servisu  izmanto - the Non-Sucking Service Manager
+https://www.nssm.cc/download
+
+Japalaizj:
+
+  ```
+  nssm install
+  ```
+  
+Jauzdod setingi:
+
+* Path - C:\Program Files\nodejs\node.exe
+* Startup directory - arduino_rs232_http direktorijs
+* Arguments - collect.js
+* Service name: arduino_rs232_http
+* Display name: Arduino RS232 HTTP
+* Log on; local system account
+* I/O - Output: logfails
+* I/O - Error: errorfails
+
+Kad gatavs, Task Manageri japaradas pservisam.
+
