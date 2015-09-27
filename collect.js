@@ -123,20 +123,12 @@ ini.parse(configFile, function (err, config) {
                     minuteCount[sensor + '/' + dateMinute] = 0;
                 }
             }
-        }, 5 * 1000);
+        }, 10 * 1000);
+        
         /**
          * each minute try sent data to server
          */
         setInterval(function () {
-
-            console.log('Start wwww');
-            console.log(minuteCount);
-            console.log(minuteCount.length);
-
-//            if (minuteCount.length == 0) {
-//                console.log('www: no data');
-//                return;
-//            }
 
             var dateMinute = actualMinute();
             console.log('Actual minute: ' + dateMinute);
@@ -156,7 +148,7 @@ ini.parse(configFile, function (err, config) {
             }
             if (Object.keys(readyMinuteCount).length == 0) {
 
-                console.log('www: no data for post');
+                //console.log('www: no data for post');
                 return;
             }
 
@@ -168,28 +160,28 @@ ini.parse(configFile, function (err, config) {
                 method: 'POST',
                 json: readyMinuteCount
             };
-            console.log(' ===== Ready minutes =========== ');
-            console.log(readyMinuteCount);
+            //console.log(' ===== Ready minutes =========== ');
+            //console.log(readyMinuteCount);
 
             request(options, function (error, response, body) {
                 if (!error && response.statusCode == 200) {
                     //var info = JSON.parse(body)
-                    console.log('body');
-                    console.dir(body);
-                    console.log('dzesh nosutitos')
+                    //console.log('body');
+                    //console.dir(body);
+                    //console.log('dzesh nosutitos')
                     for (var sensorMinute in minuteCount) {
 
                         var aSensorMinute = sensorMinute.split('/');
                         if (aSensorMinute[1] != dateMinute)
                         {
-                            console.log('Delete: ' + sensorMinute)
-                            console.log('Delete skaits: ' + minuteCount[sensorMinute])
+                            //console.log('Delete: ' + sensorMinute)
+                            //console.log('Delete skaits: ' + minuteCount[sensorMinute])
                             delete minuteCount[sensorMinute];
                         }
 
                     }
-                    console.log('Pec tirishanas')
-                    console.log(minuteCount)
+                    //console.log('Pec tirishanas')
+                    //console.log(minuteCount)
                 } else {
                     console.log('www error:' + error);
                     console.log('body');
@@ -200,7 +192,7 @@ ini.parse(configFile, function (err, config) {
                 console.log('Finish wwww');
             });
 
-        }, 10 * 1000);
+        }, 60 * 1000);
     }
 });
 
