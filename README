@@ -1,4 +1,4 @@
-Install un WINDOWS
+Install uz WINDOWS
 =================
 
 NodeJs
@@ -9,26 +9,32 @@ Arduino
 -------
 Windows driver: https://www.arduino.cc/en/Main/Software
 
-XP problemu gadijuma instrukcija: http://woodsgood.ca/projects/2014/11/18/driver-for-arduino-nano-with-ch340g-usb-chip/, kur, japalaiž http://www.wch.cn/download/CH341SER_EXE.html
+XP problēmu gadijuma instrukcija: http://woodsgood.ca/projects/2014/11/18/driver-for-arduino-nano-with-ch340g-usb-chip/, kur, japalaiž http://www.wch.cn/download/CH341SER_EXE.html
 
 NODE
---
-Janokope https://github.com/uldisn/arduino_rs232_http
+----
+Jānokopē https://github.com/uldisn/arduino_rs232_http
 
-Direktorija  arduino_rs232_http japalaiž:
+Direktorijā  arduino_rs232_http jāpalaiž:
 
     ```
     npm install
     ```
-Kas sainstales visas nepiecieshamas NodeJs bibliotekas.
+Kas sainstalēs visas nepieciešamās NodeJs bibliotēkas.
 
 config.ini faila jauzliek korektais COM ports, kam pieslegts ARDUINO un jauzrada, sensoram izmantotais bits.
 
-Šaja piemera 4 sensors pieslegts 2 Arduino bitam:
+Šajā piemērā 4 sensors pieslegts 2 Arduino bitam:
     ```
     [sensor_4]
     bit=2
     ```    
+Jāuzstāda URL, kur nosūta uzkrātos datus:
+    ```
+	[www]
+	url=http://[server domain or IP]/index.php?r=blrUzpildReg/linijasDati
+    ```  
+	
     
 No komandrindas programmu palaiž:
 
@@ -43,16 +49,16 @@ Var izmantot ar parametriem:
     ```
 Kur:
 
-config.ini - kofig fails
-debug - rada papildus info
+config.ini - kofig fails. Noklusēta vērtība config.ini
+debug - rāda papildus info
 
 Palaist ka servisu
 ==================
 
-NodeJs palaisanai, ka servisu  izmanto - the Non-Sucking Service Manager
+NodeJs palaisanai, ka servisu  izmanto NSSM -  the Non-Sucking Service Manager
 https://www.nssm.cc/download
 
-Japalaizj:
+Jāpalaizj:
 
   ```
   nssm install
@@ -69,5 +75,4 @@ Jauzdod setingi:
 * I/O - Output: logfails
 * I/O - Error: errorfails
 
-Kad gatavs, Task Manageri japaradas pservisam.
-
+Kad gatavs, Task Manageri jāparādās servisam.
